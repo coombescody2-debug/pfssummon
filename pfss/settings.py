@@ -4,6 +4,10 @@ import django.urls
 import importlib
 import django.db.models
 
+# Fix missing staticfiles tag library globally across all legacy templates
+import django.templatetags.static
+sys.modules['django.contrib.staticfiles.templatetags.staticfiles'] = django.templatetags.static
+
 # System-compliant fallback wrapper for legacy boolean properties
 class CallableBool:
     def __init__(self, value):
