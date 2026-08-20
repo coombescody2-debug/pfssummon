@@ -1,12 +1,17 @@
 import os
 import sys
 import django.urls
+import importlib
+
 sys.modules['django.core.urlresolvers'] = django.urls
 
 import six
 import django.utils
 django.utils.six = six
 sys.modules['django.utils.six'] = six
+
+django.utils.importlib = importlib
+sys.modules['django.utils.importlib'] = importlib
 
 try:
     from local_settings import *
