@@ -1,3 +1,22 @@
+import sys
+
+# Production Compatibility Bridge
+try:
+    from django.contrib.auth.models import AnonymousUser, AbstractBaseUser
+    from pfss.settings import CallableBool
+    
+    # 1. Safely attach .is_authenticated compatibility properties
+    AbstractBaseUser.is_authenticated = property(lambda self: CallableBool(True))
+    AnonymousUser.is_authenticated = property(lambda self: CallableBool(False))
+    
+    # 2. Safely bridge legacy sites.models shortcuts
+    import django.contrib.sites.shortcuts as shortcuts
+    import django.contrib.sites.models as sites_models
+    sites_models.get_current_site = shortcuts.get_current_site
+    sys.modules['django.contrib.sites.models'].get_current_site = shortcuts.get_current_site
+except Exception:
+    pass
+
 from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
