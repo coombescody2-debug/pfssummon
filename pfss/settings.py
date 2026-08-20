@@ -4,10 +4,17 @@ import django.urls
 import importlib
 import django.db.models
 
-# Fix missing get_current_site in django.contrib.sites.models
+# Fix missing get_current_site without breaking AppRegistry
+import types
 import django.contrib.sites.shortcuts
-import django.contrib.sites.models
-django.contrib.sites.models.get_current_site = django.contrib.sites.shortcuts.get_current_site
+
+class LegacySitesModels(types.ModuleType):
+    @property
+    def get_current_site(self):
+        return django.contrib.sites.shortcuts.get_current_site
+
+sys.modules['django.contrib.sites.models'] = LegacySitesModels('django.contrib.sites.models')
+
 
 # Fix urlresolvers deprecation
 sys.modules['django.core.urlresolvers'] = django.urls
