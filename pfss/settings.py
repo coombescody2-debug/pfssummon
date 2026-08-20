@@ -4,22 +4,41 @@ import django.urls
 import importlib
 import django.db.models
 
-# Fix legacy .is_authenticated() function calls on modern boolean properties
-from django.contrib.auth.models import AnonymousUser, AbstractBaseUser
+# Legacy Compatibility Patches Layer
 class CallableBool(bool):
     def __call__(self, *args, **kwargs):
         return self
 
-@property
-def patched_is_authenticated(self):
-    return CallableBool(True)
+# Registry-safe dynamic module interceptor for legacy app paths
+import builtins
+original_import = builtins.__import__
 
-@property
-def patched_anonymous_is_authenticated(self):
-    return CallableBool(False)
+def patched_import(name, globals=None, locals=None, fromlist=None, level=0):
+    module = original_import(name, globals, locals, fromlist, level)
+    
+    # Intercept account models loading to safely patch .is_authenticated()
+    if name == 'account.models' or (fromlist and 'account.models' in sys.modules):
+        try:
+            from django.contrib.auth.models import AnonymousUser, AbstractBaseUser
+            AbstractBaseUser.is_authenticated = property(lambda self: CallableBool(True))
+            AnonymousUser.is_authenticated = property(lambda self: CallableBool(False))
+        except Exception:
+            pass
+            
+    # Intercept legacy sites models path to attach missing function
+    if name == 'django.contrib.sites.models' or (fromlist and 'django.contrib.sites.models' in sys.modules):
+        try:
+            import django.contrib.sites.shortcuts as shortcuts
+            sys.modules['django.contrib.sites.models'].get_current_site = shortcuts.get_current_site
+            if module and hasattr(module, 'get_current_site') is False:
+                setattr(module, 'get_current_site', shortcuts.get_current_site)
+        except Exception:
+            pass
+            
+    return module
 
-AbstractBaseUser.is_authenticated = patched_is_authenticated
-AnonymousUser.is_authenticated = patched_anonymous_is_authenticated
+builtins.__import__ = patched_import
+
 
 # Registry-safe dynamic module interceptor for legacy sites.models paths
 import builtins
