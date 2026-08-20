@@ -22,18 +22,20 @@ class DummySubfieldBase(type):
     pass
 django.db.models.SubfieldBase = DummySubfieldBase
 
-# Fix missing on_delete on legacy OneToOne fields
+# Safe intercept for missing on_delete on OneToOneField fields
 original_onetoone_init = django.db.models.OneToOneField.__init__
 def patched_onetoone_init(self, *args, **kwargs):
-    if 'on_delete' not in kwargs:
+    # Only apply fallback if on_delete isn't passed in args or kwargs
+    if 'on_delete' not in kwargs and len(args) < 2:
         kwargs['on_delete'] = django.db.models.CASCADE
     original_onetoone_init(self, *args, **kwargs)
 django.db.models.OneToOneField.__init__ = patched_onetoone_init
 
-# Fix missing on_delete on legacy ForeignKey fields
+# Safe intercept for missing on_delete on ForeignKey fields
 original_foreignkey_init = django.db.models.ForeignKey.__init__
 def patched_foreignkey_init(self, *args, **kwargs):
-    if 'on_delete' not in kwargs:
+    # Only apply fallback if on_delete isn't passed in args or kwargs
+    if 'on_delete' not in kwargs and len(args) < 2:
         kwargs['on_delete'] = django.db.models.CASCADE
     original_foreignkey_init(self, *args, **kwargs)
 django.db.models.ForeignKey.__init__ = patched_foreignkey_init
