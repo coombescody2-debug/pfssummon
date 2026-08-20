@@ -12,7 +12,7 @@ prefix=""
 #prefix='pfs/' # used to run with runserver
 urlpatterns = [
     url(r"^%s$" % prefix, TemplateView.as_view(template_name="homepage.html"), name="home"),
-    url(r"^%sadmin/" % prefix, include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
     url(r"^%saccount/" % prefix, include("account.urls")),
     url(r'^%slist/handle/$' % prefix, pfss_views.handleList),
     url(r'^%slist/$' % prefix, pfss_views.creatureList),
