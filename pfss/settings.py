@@ -2,16 +2,25 @@ import os
 import sys
 import django.urls
 import importlib
+import django.db.models
 
+# Fix urlresolvers deprecation
 sys.modules['django.core.urlresolvers'] = django.urls
 
+# Fix django.utils.six deprecation
 import six
 import django.utils
 django.utils.six = six
 sys.modules['django.utils.six'] = six
 
+# Fix django.utils.importlib deprecation
 django.utils.importlib = importlib
 sys.modules['django.utils.importlib'] = importlib
+
+# Fix missing SubfieldBase in modern Django models
+class DummySubfieldBase(type):
+    pass
+django.db.models.SubfieldBase = DummySubfieldBase
 
 try:
     from local_settings import *
