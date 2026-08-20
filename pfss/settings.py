@@ -276,27 +276,3 @@ AUTHENTICATION_BACKENDS = [
     "account.auth_backends.UsernameAuthenticationBackend",
 ]
 
-# --- Native Production Initialization Patches ---
-import django.apps
-
-class ProductionReadyConfig(django.apps.AppConfig):
-    name = 'pfss'
-    def ready(self):
-        # Safely inject .is_authenticated compatibility properties
-        from django.contrib.auth.models import AnonymousUser, AbstractBaseUser
-        AbstractBaseUser.is_authenticated = property(lambda self: CallableBool(True))
-        AnonymousUser.is_authenticated = property(lambda self: CallableBool(False))
-        
-        # Safely bridge legacy sites.models shortcuts
-        try:
-            import django.contrib.sites.shortcuts as shortcuts
-            import django.contrib.sites.models as sites_models
-            sites_models.get_current_site = shortcuts.get_current_site
-            sys.modules['django.contrib.sites.models'].get_current_site = shortcuts.get_current_site
-        except Exception:
-            pass
-
-# Override Django's default core application state initializer
-django.apps.apps.ready = True
-ProductionReadyConfig('pfss', django.apps.apps).ready()
-
