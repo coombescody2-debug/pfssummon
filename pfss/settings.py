@@ -4,6 +4,23 @@ import django.urls
 import importlib
 import django.db.models
 
+# Fix legacy .is_authenticated() function calls on modern boolean properties
+from django.contrib.auth.models import AnonymousUser, AbstractBaseUser
+class CallableBool(bool):
+    def __call__(self, *args, **kwargs):
+        return self
+
+@property
+def patched_is_authenticated(self):
+    return CallableBool(True)
+
+@property
+def patched_anonymous_is_authenticated(self):
+    return CallableBool(False)
+
+AbstractBaseUser.is_authenticated = patched_is_authenticated
+AnonymousUser.is_authenticated = patched_anonymous_is_authenticated
+
 # Registry-safe dynamic module interceptor for legacy sites.models paths
 import builtins
 original_import = builtins.__import__
