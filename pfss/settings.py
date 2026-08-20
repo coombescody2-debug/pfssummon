@@ -4,13 +4,23 @@ import django.urls
 import importlib
 import django.db.models
 
-# Cleanly force-load the real Django sites models module early
-import django.contrib.sites.models as real_sites_models
+# Registry-safe dynamic module interceptor for legacy sites.models paths
+import builtins
+original_import = builtins.__import__
 
-# Inject the missing function directly onto the authentic module
-import django.contrib.sites.shortcuts
-real_sites_models.get_current_site = django.contrib.sites.shortcuts.get_current_site
-sys.modules['django.contrib.sites.models'].get_current_site = django.contrib.sites.shortcuts.get_current_site
+def patched_import(name, globals=None, locals=None, fromlist=None, level=0):
+    module = original_import(name, globals, locals, fromlist, level)
+    if name == 'django.contrib.sites.models' or (fromlist and 'django.contrib.sites.models' in sys.modules):
+        try:
+            import django.contrib.sites.shortcuts as shortcuts
+            sys.modules['django.contrib.sites.models'].get_current_site = shortcuts.get_current_site
+            if module and hasattr(module, 'get_current_site') is False:
+                setattr(module, 'get_current_site', shortcuts.get_current_site)
+        except Exception:
+            pass
+    return module
+
+builtins.__import__ = patched_import
 
 # Fix urlresolvers deprecation
 sys.modules['django.core.urlresolvers'] = django.urls
