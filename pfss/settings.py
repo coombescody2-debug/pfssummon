@@ -7,6 +7,12 @@ import django.db.models
 # Fix urlresolvers deprecation
 sys.modules['django.core.urlresolvers'] = django.urls
 
+# Fix missing patterns module in modern django.conf.urls
+import django.conf.urls
+def dummy_patterns(prefix, *args):
+    return list(args)
+django.conf.urls.patterns = dummy_patterns
+
 # Fix django.utils.six deprecation
 import six
 import django.utils
