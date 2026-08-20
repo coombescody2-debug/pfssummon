@@ -15,55 +15,8 @@ class CallableBool:
     def __eq__(self, other):
         return self.value == other
 
-# Registry-safe dynamic module interceptor for legacy app paths
-import builtins
-original_import = builtins.__import__
-
-def patched_import(name, globals=None, locals=None, fromlist=None, level=0):
-    module = original_import(name, globals, locals, fromlist, level)
-    
-    # Intercept account models loading to safely patch .is_authenticated()
-    if name == 'account.models' or (fromlist and 'account.models' in sys.modules):
-        try:
-            from django.contrib.auth.models import AnonymousUser, AbstractBaseUser
-            AbstractBaseUser.is_authenticated = property(lambda self: CallableBool(True))
-            AnonymousUser.is_authenticated = property(lambda self: CallableBool(False))
-        except Exception:
-            pass
-
-            
-    # Intercept legacy sites models path to attach missing function
-    if name == 'django.contrib.sites.models' or (fromlist and 'django.contrib.sites.models' in sys.modules):
-        try:
-            import django.contrib.sites.shortcuts as shortcuts
-            sys.modules['django.contrib.sites.models'].get_current_site = shortcuts.get_current_site
-            if module and hasattr(module, 'get_current_site') is False:
-                setattr(module, 'get_current_site', shortcuts.get_current_site)
-        except Exception:
-            pass
-            
-    return module
-
-builtins.__import__ = patched_import
-
-
-# Registry-safe dynamic module interceptor for legacy sites.models paths
-import builtins
-original_import = builtins.__import__
-
-def patched_import(name, globals=None, locals=None, fromlist=None, level=0):
-    module = original_import(name, globals, locals, fromlist, level)
-    if name == 'django.contrib.sites.models' or (fromlist and 'django.contrib.sites.models' in sys.modules):
-        try:
-            import django.contrib.sites.shortcuts as shortcuts
-            sys.modules['django.contrib.sites.models'].get_current_site = shortcuts.get_current_site
-            if module and hasattr(module, 'get_current_site') is False:
-                setattr(module, 'get_current_site', shortcuts.get_current_site)
-        except Exception:
-            pass
-    return module
-
-builtins.__import__ = patched_import
+# Fix missing urlresolvers deprecation
+sys.modules['django.core.urlresolvers'] = django.urls
 
 # Fix urlresolvers deprecation
 sys.modules['django.core.urlresolvers'] = django.urls
@@ -322,3 +275,28 @@ ACCOUNT_USE_AUTH_AUTHENTICATE = True
 AUTHENTICATION_BACKENDS = [
     "account.auth_backends.UsernameAuthenticationBackend",
 ]
+
+# --- Native Production Initialization Patches ---
+import django.apps
+
+class ProductionReadyConfig(django.apps.AppConfig):
+    name = 'pfss'
+    def ready(self):
+        # Safely inject .is_authenticated compatibility properties
+        from django.contrib.auth.models import AnonymousUser, AbstractBaseUser
+        AbstractBaseUser.is_authenticated = property(lambda self: CallableBool(True))
+        AnonymousUser.is_authenticated = property(lambda self: CallableBool(False))
+        
+        # Safely bridge legacy sites.models shortcuts
+        try:
+            import django.contrib.sites.shortcuts as shortcuts
+            import django.contrib.sites.models as sites_models
+            sites_models.get_current_site = shortcuts.get_current_site
+            sys.modules['django.contrib.sites.models'].get_current_site = shortcuts.get_current_site
+        except Exception:
+            pass
+
+# Override Django's default core application state initializer
+django.apps.apps.ready = True
+ProductionReadyConfig('pfss', django.apps.apps).ready()
+
