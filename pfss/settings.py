@@ -22,6 +22,14 @@ class DummySubfieldBase(type):
     pass
 django.db.models.SubfieldBase = DummySubfieldBase
 
+# Fix missing on_delete on legacy fields
+original_onetoone_init = django.db.models.OneToOneField.__init__
+def patched_onetoone_init(self, *args, **kwargs):
+    if 'on_delete' not in kwargs:
+        kwargs['on_delete'] = django.db.models.CASCADE
+    original_onetoone_init(self, *args, **kwargs)
+django.db.models.OneToOneField.__init__ = patched_onetoone_init
+
 try:
     from local_settings import *
 except ImportError:
