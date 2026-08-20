@@ -46,6 +46,9 @@ try:
 except ImportError:
     pass
 
+SECRET_KEY = os.environ.get('SECRET_KEY', 'render-fallback-secret-key-xyz-12345')
+
+
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 PACKAGE_ROOT = os.path.abspath(os.path.dirname(__file__))
 BASE_DIR = PACKAGE_ROOT
