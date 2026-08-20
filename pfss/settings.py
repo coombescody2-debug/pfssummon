@@ -24,18 +24,6 @@ class CallableBool:
 # Fix missing urlresolvers deprecation
 sys.modules['django.core.urlresolvers'] = django.urls
 
-        return self.value
-    def __bool__(self):
-        return self.value
-    def __eq__(self, other):
-        return self.value == other
-
-# Fix missing urlresolvers deprecation
-sys.modules['django.core.urlresolvers'] = django.urls
-
-# Fix urlresolvers deprecation
-sys.modules['django.core.urlresolvers'] = django.urls
-
 # Fix missing patterns module in modern django.conf.urls
 import django.conf.urls
 def dummy_patterns(prefix, *args):
