@@ -4,10 +4,10 @@ import django.urls
 import importlib
 import django.db.models
 
-# Legacy Compatibility Patches Layer
 class CallableBool(bool):
     def __call__(self, *args, **kwargs):
         return self
+
 
 # Registry-safe dynamic module interceptor for legacy app paths
 import builtins
