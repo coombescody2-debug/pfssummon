@@ -4,6 +4,11 @@ import django.urls
 import importlib
 import django.db.models
 
+# Fix missing get_current_site in django.contrib.sites.models
+import django.contrib.sites.shortcuts
+import django.contrib.sites.models
+django.contrib.sites.models.get_current_site = django.contrib.sites.shortcuts.get_current_site
+
 # Fix urlresolvers deprecation
 sys.modules['django.core.urlresolvers'] = django.urls
 
