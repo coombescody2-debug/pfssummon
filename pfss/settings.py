@@ -12,6 +12,9 @@ class LegacySitesModels(types.ModuleType):
     @property
     def get_current_site(self):
         return django.contrib.sites.shortcuts.get_current_site
+    @property
+    def __spec__(self):
+        return importlib.machinery.ModuleSpec('django.contrib.sites.models', None)
 
 sys.modules['django.contrib.sites.models'] = LegacySitesModels('django.contrib.sites.models')
 
