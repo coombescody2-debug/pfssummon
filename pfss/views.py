@@ -16,7 +16,7 @@ class creatureInstance(object):
             try:
                 setattr(self, item, base.__dict__[item])
             except Exception as e:
-                print e
+                print (e)
         self.Str = base.Str + 4 if augment else base.Str
         self.Con = base.Con + 4 if augment else base.Con
         self.BAB = base.BAB
