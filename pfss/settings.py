@@ -1,4 +1,9 @@
 import os
+
+import sys
+import django.urls
+sys.modules['django.core.urlresolvers'] = django.urls
+
 try:
     from local_settings import *
 except ImportError:
