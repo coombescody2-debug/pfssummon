@@ -4,10 +4,16 @@ import django.urls
 import importlib
 import django.db.models
 
-class CallableBool(bool):
+# System-compliant fallback wrapper for legacy boolean properties
+class CallableBool:
+    def __init__(self, value):
+        self.value = value
     def __call__(self, *args, **kwargs):
-        return self
-
+        return self.value
+    def __bool__(self):
+        return self.value
+    def __eq__(self, other):
+        return self.value == other
 
 # Registry-safe dynamic module interceptor for legacy app paths
 import builtins
@@ -24,6 +30,7 @@ def patched_import(name, globals=None, locals=None, fromlist=None, level=0):
             AnonymousUser.is_authenticated = property(lambda self: CallableBool(False))
         except Exception:
             pass
+
             
     # Intercept legacy sites models path to attach missing function
     if name == 'django.contrib.sites.models' or (fromlist and 'django.contrib.sites.models' in sys.modules):
