@@ -4,15 +4,26 @@ import django.urls
 import importlib
 import django.db.models
 
-# Fix missing staticfiles tag library globally across all legacy templates
+# --- Final Global Template Tag Override Patches ---
 import django.templatetags.static
+import django.template.defaulttags
 sys.modules['django.contrib.staticfiles.templatetags.staticfiles'] = django.templatetags.static
+django.template.defaulttags.register.libraries['staticfiles'] = django.templatetags.static
 
 # System-compliant fallback wrapper for legacy boolean properties
 class CallableBool:
     def __init__(self, value):
         self.value = value
     def __call__(self, *args, **kwargs):
+        return self.value
+    def __bool__(self):
+        return self.value
+    def __eq__(self, other):
+        return self.value == other
+
+# Fix missing urlresolvers deprecation
+sys.modules['django.core.urlresolvers'] = django.urls
+
         return self.value
     def __bool__(self):
         return self.value
