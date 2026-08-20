@@ -197,9 +197,13 @@ TEMPLATES = [
     "pfss.context_processors.site_wide_context",
 
             ],
+            'builtins': [
+                'django.templatetags.static',
+            ],
         },
     },
 ]
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
