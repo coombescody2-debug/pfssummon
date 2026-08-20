@@ -1,5 +1,6 @@
 import os
-from local_settings import *
+try:
+    from local_settings import *
 
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
@@ -206,3 +207,5 @@ ACCOUNT_USE_AUTH_AUTHENTICATE = True
 AUTHENTICATION_BACKENDS = [
     "account.auth_backends.UsernameAuthenticationBackend",
 ]
+except ImportError:
+    pass
